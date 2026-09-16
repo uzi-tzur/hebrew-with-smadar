@@ -9,19 +9,23 @@ create table if not exists public.students (
 
 alter table public.students enable row level security;
 
+drop policy if exists "Public can read students" on public.students;
 create policy "Public can read students"
   on public.students for select
   using (true);
 
+drop policy if exists "Public can insert students" on public.students;
 create policy "Public can insert students"
   on public.students for insert
   with check (true);
 
+drop policy if exists "Public can update students" on public.students;
 create policy "Public can update students"
   on public.students for update
   using (true)
   with check (true);
 
+drop policy if exists "Public can delete students" on public.students;
 create policy "Public can delete students"
   on public.students for delete
   using (true);
@@ -38,19 +42,23 @@ create table if not exists public.classes (
 
 alter table public.classes enable row level security;
 
+drop policy if exists "Public can read classes" on public.classes;
 create policy "Public can read classes"
   on public.classes for select
   using (true);
 
+drop policy if exists "Public can insert classes" on public.classes;
 create policy "Public can insert classes"
   on public.classes for insert
   with check (true);
 
+drop policy if exists "Public can update classes" on public.classes;
 create policy "Public can update classes"
   on public.classes for update
   using (true)
   with check (true);
 
+drop policy if exists "Public can delete classes" on public.classes;
 create policy "Public can delete classes"
   on public.classes for delete
   using (true);
@@ -66,19 +74,23 @@ create table if not exists public.attendance (
 
 alter table public.attendance enable row level security;
 
+drop policy if exists "Public can read attendance" on public.attendance;
 create policy "Public can read attendance"
   on public.attendance for select
   using (true);
 
+drop policy if exists "Public can insert attendance" on public.attendance;
 create policy "Public can insert attendance"
   on public.attendance for insert
   with check (true);
 
+drop policy if exists "Public can update attendance" on public.attendance;
 create policy "Public can update attendance"
   on public.attendance for update
   using (true)
   with check (true);
 
+drop policy if exists "Public can delete attendance" on public.attendance;
 create policy "Public can delete attendance"
   on public.attendance for delete
   using (true);
@@ -98,19 +110,23 @@ alter table public.billing add column if not exists balance_forward numeric(10, 
 
 alter table public.billing enable row level security;
 
+drop policy if exists "Public can read billing" on public.billing;
 create policy "Public can read billing"
   on public.billing for select
   using (true);
 
+drop policy if exists "Public can insert billing" on public.billing;
 create policy "Public can insert billing"
   on public.billing for insert
   with check (true);
 
+drop policy if exists "Public can update billing" on public.billing;
 create policy "Public can update billing"
   on public.billing for update
   using (true)
   with check (true);
 
+drop policy if exists "Public can delete billing" on public.billing;
 create policy "Public can delete billing"
   on public.billing for delete
   using (true);
