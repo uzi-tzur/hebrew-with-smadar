@@ -68,7 +68,7 @@ function codePage(nextPath, error) {
 }
 
 export default async function middleware(request) {
-  const accessCode = process.env.MYTRIP_ACCESS_CODE
+  const accessCode = process.env.HEB_ACCESS_CODE
   if (!accessCode) return new Response('Access code is not configured.', { status: 503 })
 
   const url = new URL(request.url)
