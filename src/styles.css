@@ -1787,6 +1787,16 @@ fieldset legend {
   width: 180px;
   text-align: left;
   padding-left: 24px;
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: var(--paper);
+  box-shadow: 1px 0 0 var(--line), 4px 0 6px -4px rgba(0, 0, 0, 0.12);
+}
+
+.attendance-table .attendance-student-heading {
+  background: #faf9f5;
+  z-index: 3;
 }
 
 .day-heading {
@@ -1808,10 +1818,13 @@ fieldset legend {
 }
 
 .attendance-student {
+  color: var(--ink);
+}
+
+.attendance-student-name {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: var(--ink);
 }
 
 .attendance-cell {
@@ -2001,6 +2014,23 @@ fieldset legend {
 
   .chart-heading {
     flex-direction: column;
+  }
+
+  .attendance-table .attendance-student-heading,
+  .attendance-table .attendance-student {
+    width: 120px;
+    padding-left: 12px;
+  }
+
+  .attendance-table .attendance-student .avatar {
+    display: none;
+  }
+
+  .attendance-student-name strong {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 
