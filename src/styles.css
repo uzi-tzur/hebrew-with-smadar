@@ -1288,30 +1288,31 @@ tr:last-child td {
   color: var(--navy);
 }
 
-.billing-table th:nth-child(-n+2),
-.billing-table td:nth-child(-n+2) {
-  position: sticky;
-  z-index: 2;
-  background: var(--paper);
-}
-
-.billing-table th:nth-child(-n+2) {
-  background: #faf9f5;
-  z-index: 3;
-}
-
 .billing-table th:first-child,
 .billing-table td:first-child {
-  left: 0;
   width: 170px;
   min-width: 170px;
   max-width: 170px;
 }
 
-.billing-table th:nth-child(2),
-.billing-table td:nth-child(2) {
-  left: 170px;
+.freeze-host {
+  position: relative;
+}
+
+.frozen-overlay {
+  position: absolute;
+  z-index: 2;
+  overflow: hidden;
+  pointer-events: none;
   box-shadow: 1px 0 0 var(--line), 4px 0 6px -4px rgba(0, 0, 0, 0.12);
+}
+
+.frozen-overlay table {
+  max-width: none;
+}
+
+.frozen-overlay td {
+  background: var(--paper);
 }
 
 .billing-students {
@@ -2076,6 +2077,39 @@ fieldset legend {
     display: none;
   }
 
+  table[data-freeze="1"] {
+    min-width: 0;
+  }
+
+  table[data-freeze="1"] th,
+  table[data-freeze="1"] td {
+    padding-left: 10px;
+    padding-right: 10px;
+    white-space: nowrap;
+  }
+
+  table[data-freeze="1"] th:first-child,
+  table[data-freeze="1"] td:first-child {
+    width: 120px;
+    max-width: 120px;
+    padding-left: 12px;
+  }
+
+  table[data-freeze="1"] .person-cell {
+    min-width: 0;
+    gap: 8px;
+  }
+
+  table[data-freeze="1"] .person-cell .avatar {
+    display: none;
+  }
+
+  table[data-freeze="1"] .person-cell div {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   .billing-table {
     min-width: 0;
   }
@@ -2100,7 +2134,6 @@ fieldset legend {
 
   .billing-table th:nth-child(2),
   .billing-table td:nth-child(2) {
-    left: 76px;
     width: 92px;
     min-width: 92px;
     max-width: 92px;
@@ -2242,5 +2275,17 @@ button:disabled {
     padding: 8px 4px;
     font-size: 12px;
     text-align: center;
+  }
+}
+
+/* Keep table panels edge-to-edge on small phones (the generic .panel padding above overrides them). */
+@media (max-width: 440px) {
+  .billing-panel,
+  .attendance-sheet {
+    padding: 0;
+  }
+
+  .table-panel {
+    padding: 18px 0 0;
   }
 }
