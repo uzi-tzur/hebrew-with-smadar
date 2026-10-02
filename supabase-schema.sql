@@ -130,3 +130,28 @@ drop policy if exists "Public can delete billing" on public.billing;
 create policy "Public can delete billing"
   on public.billing for delete
   using (true);
+
+create table if not exists public.backups (
+  id bigint generated always as identity primary key,
+  created_at timestamptz not null default now(),
+  reason text not null default 'manual',
+  summary jsonb not null default '{}',
+  data jsonb not null
+);
+
+alter table public.backups enable row level security;
+
+drop policy if exists "Public can read backups" on public.backups;
+create policy "Public can read backups"
+  on public.backups for select
+  using (true);
+
+drop policy if exists "Public can insert backups" on public.backups;
+create policy "Public can insert backups"
+  on public.backups for insert
+  with check (true);
+
+drop policy if exists "Public can delete backups" on public.backups;
+create policy "Public can delete backups"
+  on public.backups for delete
+  using (true);

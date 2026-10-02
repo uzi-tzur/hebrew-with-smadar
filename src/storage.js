@@ -217,3 +217,104 @@ export async function saveBilling(billing) {
   const { error } = await supabase.from('billing').upsert(records, { onConflict: 'parent,billing_month,billing_year' })
   if (error) throw error
 }
+
+const backupTables = {
+  students: { columns: 'id, name, parent, phone, accent', conflict: 'id' },
+  classes: { columns: 'id, number, name, day, cost, student_ids', conflict: 'id' },
+  attendance: { columns: 'class_id, student_id, attendance_date, present', conflict: 'class_id,student_id,attendance_date' },
+  billing: { columns: 'parent, billing_month, billing_year, amount_paid, payment_method, balance_forward', conflict: 'parent,billing_month,billing_year' }
+}
+const keepSnapshots = 30
+
+export function backupSummary(backup) {
+  return Object.fromEntries(Object.keys(backupTables).map((table) => [table, (backup[table] || []).length]))
+}
+
+function localBackup() {
+  const attendance = Object.entries(readAttendance()).filter(([, present]) => present).map(([key]) => {
+    const [classId, attendanceDate, studentId] = key.split(':')
+    return { class_id: Number(classId), student_id: Number(studentId), attendance_date: attendanceDate, present: true }
+  })
+  const billing = Object.entries(readBilling()).map(([key, value]) => {
+    const separator = key.lastIndexOf(':')
+    const [billingYear, billingMonth] = key.slice(separator + 1).split('-')
+    return { parent: key.slice(0, separator), billing_month: Number(billingMonth), billing_year: Number(billingYear), amount_paid: Number(value.amountPaid || 0), payment_method: value.paymentMethod || null, balance_forward: Number(value.balanceForward || 0) }
+  })
+  return {
+    students: readLocal().map(({ id, name, parent, phone, accent }) => ({ id, name, parent, phone, accent })),
+    classes: readClasses().map(({ id, number, name, day, cost, studentIds }) => ({ id, number, name, day, cost, student_ids: studentIds || [] })),
+    attendance,
+    billing
+  }
+}
+
+export async function exportData() {
+  let tables
+  if (!supabase) {
+    tables = localBackup()
+  } else {
+    tables = {}
+    for (const [table, { columns }] of Object.entries(backupTables)) {
+      const { data, error } = await supabase.from(table).select(columns)
+      if (error) throw error
+      tables[table] = data || []
+    }
+  }
+  return { app: 'hebrew-with-smadar', version: 1, createdAt: new Date().toISOString(), ...tables }
+}
+
+// Merges a backup into the current data: rows in the backup are added or overwritten, nothing is deleted.
+export async function importData(backup) {
+  if (backup?.app !== 'hebrew-with-smadar' || !Object.keys(backupTables).every((table) => Array.isArray(backup[table]))) {
+    throw new Error('This file is not a Hebrew with Smadar backup.')
+  }
+  if (!supabase) {
+    const current = localBackup()
+    const merge = (table, key) => [...new Map([...current[table], ...backup[table]].map((row) => [key(row), row])).values()]
+    writeLocal(merge('students', (row) => row.id))
+    writeClasses(merge('classes', (row) => row.id).map(({ student_ids: studentIds, ...group }) => ({ ...group, studentIds: studentIds || [] })))
+    writeAttendance(Object.fromEntries(merge('attendance', (row) => `${row.class_id}:${row.attendance_date}:${row.student_id}`).map((row) => [`${row.class_id}:${row.attendance_date}:${row.student_id}`, true])))
+    writeBilling(Object.fromEntries(merge('billing', (row) => `${row.parent}:${row.billing_year}-${row.billing_month}`).map((row) => [`${row.parent}:${row.billing_year}-${String(row.billing_month).padStart(2, '0')}`, { amountPaid: Number(row.amount_paid || 0), paymentMethod: row.payment_method || '', balanceForward: Number(row.balance_forward || 0) }])))
+    return
+  }
+  // Students and classes first: attendance rows reference them.
+  for (const [table, { conflict }] of Object.entries(backupTables)) {
+    if (!backup[table].length) continue
+    const { error } = await supabase.from(table).upsert(backup[table], { onConflict: conflict })
+    if (error) throw error
+  }
+}
+
+export async function listSnapshots() {
+  if (!supabase) return null
+  const { data, error } = await supabase.from('backups').select('id, created_at, summary, reason').order('created_at', { ascending: false })
+  if (error) return null
+  return data || []
+}
+
+export async function getSnapshot(id) {
+  const { data, error } = await supabase.from('backups').select('data').eq('id', id).single()
+  if (error) throw error
+  return data.data
+}
+
+export async function createSnapshot(reason = 'manual') {
+  if (!supabase) return false
+  const backup = await exportData()
+  const summary = backupSummary(backup)
+  if (!Object.values(summary).some(Boolean)) return false
+  const { error } = await supabase.from('backups').insert({ data: backup, summary, reason })
+  if (error) throw error
+  const { data: old } = await supabase.from('backups').select('id').order('created_at', { ascending: false }).range(keepSnapshots, keepSnapshots + 100)
+  if (old?.length) await supabase.from('backups').delete().in('id', old.map((row) => row.id))
+  return true
+}
+
+// One automatic cloud snapshot per day, taken when the app opens.
+export async function autoSnapshot() {
+  if (!supabase) return
+  const { data, error } = await supabase.from('backups').select('created_at').order('created_at', { ascending: false }).limit(1)
+  if (error) return
+  if (data?.length && Date.now() - new Date(data[0].created_at).getTime() < 20 * 60 * 60 * 1000) return
+  await createSnapshot('daily').catch(() => {})
+}
