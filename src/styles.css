@@ -2077,34 +2077,46 @@ fieldset legend {
     display: none;
   }
 
-  table[data-freeze="1"] {
+  .roster-table {
     min-width: 0;
   }
 
-  table[data-freeze="1"] th,
-  table[data-freeze="1"] td {
+  .roster-table th,
+  .roster-table td {
     padding-left: 10px;
     padding-right: 10px;
     white-space: nowrap;
   }
 
-  table[data-freeze="1"] th:first-child,
-  table[data-freeze="1"] td:first-child {
+  .roster-table th:first-child,
+  .roster-table td:first-child {
     width: 120px;
     max-width: 120px;
     padding-left: 12px;
   }
 
-  table[data-freeze="1"] .person-cell {
+  .roster-table th:nth-child(2),
+  .roster-table td:nth-child(2) {
+    width: 90px;
+    max-width: 90px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .roster-table th {
+    white-space: normal;
+  }
+
+  .roster-table .person-cell {
     min-width: 0;
     gap: 8px;
   }
 
-  table[data-freeze="1"] .person-cell .avatar {
+  .roster-table .person-cell .avatar {
     display: none;
   }
 
-  table[data-freeze="1"] .person-cell div {
+  .roster-table .person-cell div {
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
