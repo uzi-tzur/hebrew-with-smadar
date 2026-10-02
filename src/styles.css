@@ -1288,6 +1288,32 @@ tr:last-child td {
   color: var(--navy);
 }
 
+.billing-table th:nth-child(-n+2),
+.billing-table td:nth-child(-n+2) {
+  position: sticky;
+  z-index: 2;
+  background: var(--paper);
+}
+
+.billing-table th:nth-child(-n+2) {
+  background: #faf9f5;
+  z-index: 3;
+}
+
+.billing-table th:first-child,
+.billing-table td:first-child {
+  left: 0;
+  width: 170px;
+  min-width: 170px;
+  max-width: 170px;
+}
+
+.billing-table th:nth-child(2),
+.billing-table td:nth-child(2) {
+  left: 170px;
+  box-shadow: 1px 0 0 var(--line), 4px 0 6px -4px rgba(0, 0, 0, 0.12);
+}
+
 .billing-students {
   display: grid;
   gap: 4px;
@@ -2024,6 +2050,50 @@ fieldset legend {
 
   .attendance-table .attendance-student .avatar {
     display: none;
+  }
+
+  .billing-table {
+    min-width: 0;
+  }
+
+  .billing-table th,
+  .billing-table td {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  .billing-table th:first-child,
+  .billing-table td:first-child {
+    width: 76px;
+    min-width: 76px;
+    max-width: 76px;
+    padding-left: 12px;
+  }
+
+  .billing-table td:first-child {
+    overflow-wrap: anywhere;
+  }
+
+  .billing-table th:nth-child(2),
+  .billing-table td:nth-child(2) {
+    left: 76px;
+    width: 92px;
+    min-width: 92px;
+    max-width: 92px;
+  }
+
+  .billing-table .row-action {
+    padding-left: 4px;
+    padding-right: 4px;
+  }
+
+  .billing-table .billing-students {
+    min-width: 0;
+  }
+
+  .billing-table .billing-students small {
+    display: block;
+    margin-left: 0;
   }
 
   .attendance-student-name strong {
