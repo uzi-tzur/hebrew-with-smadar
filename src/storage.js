@@ -151,6 +151,17 @@ export async function loadAttendance() {
     return localAttendance
   }
 
+  // Cloud empty but this device still has marks: restore them instead of wiping the local copy.
+  const localRecords = Object.entries(localAttendance).filter(([, present]) => present).map(([key]) => {
+    const [classId, attendanceDate, studentId] = key.split(':')
+    return { class_id: Number(classId), student_id: Number(studentId), attendance_date: attendanceDate, present: true }
+  })
+  if (!data?.length && localRecords.length) {
+    const { error } = await supabase.from('attendance').upsert(localRecords, { onConflict: 'class_id,student_id,attendance_date' })
+    if (error) console.error('Could not restore attendance from this device', error)
+    return localAttendance
+  }
+
   const attendance = {}
     ; (data || []).forEach((record) => { attendance[`${record.class_id}:${record.attendance_date}:${record.student_id}`] = record.present })
   writeAttendance(attendance)
