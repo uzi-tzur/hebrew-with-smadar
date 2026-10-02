@@ -1793,13 +1793,42 @@ fieldset legend {
   vertical-align: -1px;
 }
 
+/* Names live in their own table beside the scrolling days, so they stay put on every browser. */
+.attendance-frame {
+  display: flex;
+  align-items: flex-start;
+}
+
+.attendance-names {
+  flex: none;
+  width: 180px;
+  min-width: 0;
+  table-layout: fixed;
+  position: relative;
+  z-index: 1;
+  box-shadow: 1px 0 0 var(--line), 4px 0 6px -4px rgba(0, 0, 0, 0.12);
+}
+
 .attendance-table-wrap {
+  flex: 1;
+  min-width: 0;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .attendance-table {
   min-width: 920px;
   table-layout: fixed;
+}
+
+.attendance-names th,
+.attendance-table th {
+  height: 52px;
+}
+
+.attendance-names td,
+.attendance-table td {
+  height: 48px;
 }
 
 .attendance-table th,
@@ -1808,21 +1837,13 @@ fieldset legend {
   text-align: center;
 }
 
-.attendance-table .attendance-student-heading,
-.attendance-table .attendance-student {
-  width: 180px;
+.attendance-names .attendance-student-heading,
+.attendance-names .attendance-student {
   text-align: left;
-  padding-left: 24px;
-  position: sticky;
-  left: 0;
-  z-index: 2;
-  background: var(--paper);
-  box-shadow: 1px 0 0 var(--line), 4px 0 6px -4px rgba(0, 0, 0, 0.12);
-}
-
-.attendance-table .attendance-student-heading {
-  background: #faf9f5;
-  z-index: 3;
+  padding: 8px 8px 8px 24px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .day-heading {
@@ -2042,13 +2063,16 @@ fieldset legend {
     flex-direction: column;
   }
 
-  .attendance-table .attendance-student-heading,
-  .attendance-table .attendance-student {
-    width: 120px;
+  .attendance-names {
+    width: 110px;
+  }
+
+  .attendance-names .attendance-student-heading,
+  .attendance-names .attendance-student {
     padding-left: 12px;
   }
 
-  .attendance-table .attendance-student .avatar {
+  .attendance-names .attendance-student .avatar {
     display: none;
   }
 
