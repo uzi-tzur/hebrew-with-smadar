@@ -2193,3 +2193,30 @@ button:disabled {
     align-items: start;
   }
 }
+
+/* Phone menu: all tabs visible on their own row under the logo. */
+@media (max-width: 760px) {
+  .topbar {
+    height: auto;
+    flex-wrap: wrap;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    row-gap: 10px;
+  }
+
+  .mobile-nav {
+    order: 3;
+    flex: 1 1 100%;
+    max-width: none;
+    overflow: visible;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+  }
+
+  .mobile-nav-button {
+    padding: 8px 4px;
+    font-size: 12px;
+    text-align: center;
+  }
+}
