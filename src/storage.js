@@ -86,12 +86,17 @@ export async function saveStudents(students) {
   writeLocal(students)
   if (!supabase) return
 
-  const { error: deleteError } = await supabase.from('students').delete().not('id', 'is', null)
-  if (deleteError) throw deleteError
   if (!students.length) return
 
-  const { error: insertError } = await supabase.from('students').insert(students.map(({ id, name, parent, phone, accent }) => ({ id, name, parent, phone, accent })))
-  if (insertError) throw insertError
+  // Upsert only: deleting students cascades to their attendance.
+  const { error } = await supabase.from('students').upsert(students.map(({ id, name, parent, phone, accent }) => ({ id, name, parent, phone, accent })), { onConflict: 'id' })
+  if (error) throw error
+}
+
+export async function deleteStudent(id) {
+  if (!supabase) return
+  const { error } = await supabase.from('students').delete().eq('id', id)
+  if (error) throw error
 }
 
 export async function loadClasses() {
@@ -120,12 +125,17 @@ export async function saveClasses(classes) {
   writeClasses(classes)
   if (!supabase) return
 
-  const { error: deleteError } = await supabase.from('classes').delete().not('id', 'is', null)
-  if (deleteError) throw deleteError
   if (!classes.length) return
 
-  const { error: insertError } = await supabase.from('classes').insert(classes.map(({ id, number, name, day, cost, studentIds }) => ({ id, number, name, day, cost, student_ids: studentIds || [] })))
-  if (insertError) throw insertError
+  // Upsert only: deleting classes cascades to their attendance.
+  const { error } = await supabase.from('classes').upsert(classes.map(({ id, number, name, day, cost, studentIds }) => ({ id, number, name, day, cost, student_ids: studentIds || [] })), { onConflict: 'id' })
+  if (error) throw error
+}
+
+export async function deleteClass(id) {
+  if (!supabase) return
+  const { error } = await supabase.from('classes').delete().eq('id', id)
+  if (error) throw error
 }
 
 export async function loadAttendance() {
@@ -147,19 +157,17 @@ export async function loadAttendance() {
   return attendance
 }
 
-export async function saveAttendance(attendance) {
+// Saves a single mark so one device can't overwrite marks made on another.
+export async function saveAttendanceMark(attendance, key) {
   writeAttendance(attendance)
   if (!supabase) return
 
-  const { error: deleteError } = await supabase.from('attendance').delete().not('student_id', 'is', null)
-  if (deleteError) throw deleteError
-  const records = Object.entries(attendance).filter(([, present]) => present).map(([key]) => {
-    const [classId, attendanceDate, studentId] = key.split(':')
-    return { class_id: Number(classId), student_id: Number(studentId), attendance_date: attendanceDate, present: true }
-  })
-  if (!records.length) return
-  const { error: insertError } = await supabase.from('attendance').insert(records)
-  if (insertError) throw insertError
+  const [classId, attendanceDate, studentId] = key.split(':')
+  const record = { class_id: Number(classId), student_id: Number(studentId), attendance_date: attendanceDate }
+  const { error } = attendance[key]
+    ? await supabase.from('attendance').upsert({ ...record, present: true }, { onConflict: 'class_id,student_id,attendance_date' })
+    : await supabase.from('attendance').delete().match(record)
+  if (error) throw error
 }
 
 export async function loadBilling() {
@@ -188,8 +196,6 @@ export async function saveBilling(billing) {
   writeBilling(billing)
   if (!supabase) return
 
-  const { error: deleteError } = await supabase.from('billing').delete().not('parent', 'is', null)
-  if (deleteError) throw deleteError
   const records = Object.entries(billing).map(([key, value]) => {
     const separator = key.lastIndexOf(':')
     const parent = key.slice(0, separator)
@@ -197,6 +203,6 @@ export async function saveBilling(billing) {
     return { parent, billing_month: Number(billingMonth), billing_year: Number(billingYear), amount_paid: Number(value.amountPaid || 0), payment_method: value.paymentMethod || null, balance_forward: Number(value.balanceForward || 0) }
   })
   if (!records.length) return
-  const { error: insertError } = await supabase.from('billing').insert(records)
-  if (insertError) throw insertError
+  const { error } = await supabase.from('billing').upsert(records, { onConflict: 'parent,billing_month,billing_year' })
+  if (error) throw error
 }
