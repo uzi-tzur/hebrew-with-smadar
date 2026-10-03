@@ -2399,6 +2399,18 @@ button:disabled {
   background: #1da851;
 }
 
+.sms-button {
+  background: #2f7de1;
+}
+
+.sms-button:hover {
+  background: #2167c2;
+}
+
+.channel-toggle button {
+  font-size: 11px;
+}
+
 .comm-paid {
   color: var(--muted);
   font-size: 12px;
@@ -2463,8 +2475,12 @@ button:disabled {
     text-align: center;
   }
 
+  .comm-send {
+    flex-wrap: wrap;
+  }
+
   .comm-send .whatsapp-button {
-    flex: 1;
+    flex: 1 1 100%;
     text-align: center;
   }
 }
