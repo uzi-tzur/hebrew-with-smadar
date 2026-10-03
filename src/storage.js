@@ -105,14 +105,17 @@ export async function loadClasses() {
 
   let data
   try {
-    const result = await supabase.from('classes').select('id, number, name, day, cost, student_ids').order('created_at', { ascending: true })
+    let result = await supabase.from('classes').select('id, number, name, day, lesson_time, cost, student_ids').order('created_at', { ascending: true })
+    // Before the lesson_time column is added in Supabase, load the classes without it.
+    if (result.error) result = await supabase.from('classes').select('id, number, name, day, cost, student_ids').order('created_at', { ascending: true })
     if (result.error) throw result.error
     data = result.data
   } catch {
     return localClasses
   }
 
-  const classes = (data || []).map(({ student_ids: studentIds, ...group }) => ({ ...group, studentIds: studentIds || [] }))
+  const localTimes = new Map(localClasses.map((group) => [group.id, group.lessonTime]))
+  const classes = (data || []).map(({ student_ids: studentIds, lesson_time: lessonTime, ...group }) => ({ ...group, lessonTime: lessonTime ?? localTimes.get(group.id) ?? '', studentIds: studentIds || [] }))
   if (!classes.length && localClasses.length) {
     await saveClasses(localClasses)
     return localClasses
@@ -128,7 +131,10 @@ export async function saveClasses(classes) {
   if (!classes.length) return
 
   // Upsert only: deleting classes cascades to their attendance.
-  const { error } = await supabase.from('classes').upsert(classes.map(({ id, number, name, day, cost, studentIds }) => ({ id, number, name, day, cost, student_ids: studentIds || [] })), { onConflict: 'id' })
+  const rows = classes.map(({ id, number, name, day, lessonTime, cost, studentIds }) => ({ id, number, name, day, lesson_time: lessonTime || '', cost, student_ids: studentIds || [] }))
+  let { error } = await supabase.from('classes').upsert(rows, { onConflict: 'id' })
+  // Before the lesson_time column is added in Supabase, save everything else and keep the time on this device.
+  if (error && String(error.message).includes('lesson_time')) ({ error } = await supabase.from('classes').upsert(rows.map(({ lesson_time: _, ...row }) => row), { onConflict: 'id' }))
   if (error) throw error
 }
 
@@ -220,7 +226,7 @@ export async function saveBilling(billing) {
 
 const backupTables = {
   students: { columns: 'id, name, parent, phone, accent', conflict: 'id' },
-  classes: { columns: 'id, number, name, day, cost, student_ids', conflict: 'id' },
+  classes: { columns: 'id, number, name, day, lesson_time, cost, student_ids', conflict: 'id' },
   attendance: { columns: 'class_id, student_id, attendance_date, present', conflict: 'class_id,student_id,attendance_date' },
   billing: { columns: 'parent, billing_month, billing_year, amount_paid, payment_method, balance_forward', conflict: 'parent,billing_month,billing_year' }
 }
@@ -242,7 +248,7 @@ function localBackup() {
   })
   return {
     students: readLocal().map(({ id, name, parent, phone, accent }) => ({ id, name, parent, phone, accent })),
-    classes: readClasses().map(({ id, number, name, day, cost, studentIds }) => ({ id, number, name, day, cost, student_ids: studentIds || [] })),
+    classes: readClasses().map(({ id, number, name, day, lessonTime, cost, studentIds }) => ({ id, number, name, day, lesson_time: lessonTime || '', cost, student_ids: studentIds || [] })),
     attendance,
     billing
   }
@@ -272,7 +278,7 @@ export async function importData(backup) {
     const current = localBackup()
     const merge = (table, key) => [...new Map([...current[table], ...backup[table]].map((row) => [key(row), row])).values()]
     writeLocal(merge('students', (row) => row.id))
-    writeClasses(merge('classes', (row) => row.id).map(({ student_ids: studentIds, ...group }) => ({ ...group, studentIds: studentIds || [] })))
+    writeClasses(merge('classes', (row) => row.id).map(({ student_ids: studentIds, lesson_time: lessonTime, ...group }) => ({ ...group, lessonTime: lessonTime || '', studentIds: studentIds || [] })))
     writeAttendance(Object.fromEntries(merge('attendance', (row) => `${row.class_id}:${row.attendance_date}:${row.student_id}`).map((row) => [`${row.class_id}:${row.attendance_date}:${row.student_id}`, true])))
     writeBilling(Object.fromEntries(merge('billing', (row) => `${row.parent}:${row.billing_year}-${row.billing_month}`).map((row) => [`${row.parent}:${row.billing_year}-${String(row.billing_month).padStart(2, '0')}`, { amountPaid: Number(row.amount_paid || 0), paymentMethod: row.payment_method || '', balanceForward: Number(row.balance_forward || 0) }])))
     return

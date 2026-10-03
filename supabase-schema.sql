@@ -35,10 +35,13 @@ create table if not exists public.classes (
   number text not null,
   name text not null default '',
   day text not null,
+  lesson_time text not null default '',
   cost numeric(10, 2) not null default 0,
   student_ids bigint[] not null default '{}',
   created_at timestamptz not null default now()
 );
+
+alter table public.classes add column if not exists lesson_time text not null default '';
 
 alter table public.classes enable row level security;
 
