@@ -2405,6 +2405,47 @@ button:disabled {
   padding: 9px 13px;
 }
 
+.comm-message-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.comm-send {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lang-toggle {
+  display: inline-flex;
+  border: 1px solid #d2e3dd;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--paper);
+}
+
+.lang-toggle button {
+  min-width: 32px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 7px 9px;
+  letter-spacing: normal;
+}
+
+.lang-toggle button + button {
+  border-left: 1px solid #d2e3dd;
+}
+
+.lang-toggle button.active {
+  background: var(--teal);
+  color: #fff;
+}
+
 @media (max-width: 760px) {
   .comm-form label,
   .comm-form select,
@@ -2416,9 +2457,14 @@ button:disabled {
     grid-template-columns: 1fr auto;
   }
 
-  .comm-row > .whatsapp-button,
+  .comm-row > .comm-send,
   .comm-row > .comm-paid {
     grid-column: 1 / -1;
+    text-align: center;
+  }
+
+  .comm-send .whatsapp-button {
+    flex: 1;
     text-align: center;
   }
 }
